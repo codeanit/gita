@@ -63,6 +63,7 @@ def test_not_add():
     __main__.main(['add', '/home/some/repo/'])
 
 
+@patch('os.cpu_count', return_value=1)
 @patch(
     'gita.utils.get_repos', return_value={
         'repo1': '/a/bc',

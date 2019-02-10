@@ -1,8 +1,10 @@
 import os
 import yaml
+import asyncio
+import platform
 import subprocess
 from functools import lru_cache
-from typing import List, Dict, Tuple
+from typing import List, Dict, Tuple, Iterable
 
 
 class Color:
@@ -139,6 +141,34 @@ def exec_git(path: str, cmd: List[str]):
     # if has_remote():
     #    os.system('git ' + cmd)
     subprocess.run(['git'] + cmd, cwd=path)
+
+
+def exec_git_async(paths: Iterable[str], cmd: List[str]):
+    """
+    Execute git `cmd` in the `path` directory asynchronously
+    """
+    # TODO: asyncio API is nicer in python 3.7
+    print('async -------------------------------')
+
+    async def run_command(path):
+        process = await asyncio.create_subprocess_exec(*command, cwd=path)
+        stdout, _ = await process.communicate()
+        # Return stdout
+        return stdout and stdout.decode().strip()
+
+    if platform.system() == 'Windows':
+        loop = asyncio.ProactorEventLoop()
+        asyncio.set_event_loop(loop)
+    else:
+        loop = asyncio.get_event_loop()
+
+    command = ['git'] + cmd
+    tasks = [run_command(path) for path in paths]
+
+    try:
+        loop.run_until_complete(asyncio.gather(*tasks))
+    finally:
+        loop.close()
 
 
 def get_common_commit() -> str:

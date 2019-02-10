@@ -51,8 +51,12 @@ def f_git_cmd(args: argparse.Namespace):
     repos = utils.get_repos()
     if args.repo:  # with user specified repo(s)
         repos = {k: repos[k] for k in args.repo}
-    for path in repos.values():
-        utils.exec_git(path, args.cmd)
+    cpu_count = os.cpu_count() or -1  # -1 means undetermined
+    if len(repos) == 1 or cpu_count < 2:
+        for path in repos.values():
+            utils.exec_git(path, args.cmd)
+    else:  # run concurrent subprocesses
+        utils.exec_git_async(repos.values(), args.cmd)
 
 
 def f_super(args):
