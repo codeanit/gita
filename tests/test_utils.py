@@ -2,7 +2,7 @@ import pytest
 from unittest.mock import patch, mock_open
 
 from gita import utils
-from conftest import PATH_FNAME, PATH_FNAME_EMPTY, PATH_FNAME_CLASH
+from conftest import PATH_FNAME, PATH_FNAME_EMPTY, PATH_FNAME_CLASH, async_mock
 
 
 @pytest.mark.parametrize('test_input, diff_return, expected', [
@@ -72,3 +72,17 @@ def test_add_repos(_0, _1, _2, path_input, expected, monkeypatch):
     mock_file.assert_called_with('/config/gita/repo_path', 'w')
     handle = mock_file()
     handle.write.assert_called_once_with(expected)
+
+
+@patch('gita.utils.run_command', new=async_mock())
+def test_exec_git_async():
+    paths = ['/a/b/repo1', '/c/d/repo2']
+    sub_cmds = ['git-subcommand', 'something']
+    cmds = ['git'] + sub_cmds
+
+    utils.exec_git_async(paths, sub_cmds)
+    mock_run = utils.run_command.mock
+    assert mock_run.call_count == 2
+    for path in paths:
+        utils.run_command.mock.assert_any_call(path, cmds)
+

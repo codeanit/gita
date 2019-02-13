@@ -143,18 +143,20 @@ def exec_git(path: str, cmd: List[str]):
     subprocess.run(['git'] + cmd, cwd=path)
 
 
+async def run_command(path, command):
+    process = await asyncio.create_subprocess_exec(*command, cwd=path)
+    stdout, _ = await process.communicate()
+    # FIXME: do I need to deal with stdin? for example, password for login?
+    # Return stdout
+    return stdout and stdout.decode().strip()
+
+
 def exec_git_async(paths: Iterable[str], cmd: List[str]):
     """
     Execute git `cmd` in the `path` directory asynchronously
     """
     # TODO: asyncio API is nicer in python 3.7
     print('async -------------------------------')
-
-    async def run_command(path):
-        process = await asyncio.create_subprocess_exec(*command, cwd=path)
-        stdout, _ = await process.communicate()
-        # Return stdout
-        return stdout and stdout.decode().strip()
 
     if platform.system() == 'Windows':
         loop = asyncio.ProactorEventLoop()
@@ -163,7 +165,7 @@ def exec_git_async(paths: Iterable[str], cmd: List[str]):
         loop = asyncio.get_event_loop()
 
     command = ['git'] + cmd
-    tasks = [run_command(path) for path in paths]
+    tasks = [run_command(path, command) for path in paths]
 
     try:
         loop.run_until_complete(asyncio.gather(*tasks))

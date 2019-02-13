@@ -72,9 +72,9 @@ def test_not_add():
 @patch('subprocess.run')
 def test_fetch(mock_run, *_):
     __main__.main(['fetch'])
+    assert mock_run.call_count == 2
     mock_run.assert_any_call(['git', 'fetch'], cwd='/d/efg')
     mock_run.assert_any_call(['git', 'fetch'], cwd='/a/bc')
-    assert mock_run.call_count == 2
 
 
 @pytest.mark.parametrize('input', [
